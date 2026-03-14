@@ -10,13 +10,21 @@
 
 terraform {
   required_version = ">= 0.12"
+  backend "s3" {
+    bucket = "203802642705-terraform-states"
+    key    = "terraform/terraform.tfstate"
+    region = "ap-south-2"
+    dynamodb_table = "terraform-lock"
+  }
 }
 
 # ------------------------------------------------------------------------------
 # CONFIGURE OUR AWS CONNECTION
 # ------------------------------------------------------------------------------
 
-provider "aws" {}
+provider "aws" {
+  region = "ap-south-2"
+}
 
 # ------------------------------------------------------------------------------
 # CREATE THE S3 BUCKET
@@ -47,7 +55,44 @@ resource "aws_s3_bucket" "terraform_state" {
     }
   }
 }
+resource "aws_s3_bucket" "terraform_state1" {
+  # With account id, this S3 bucket names can be *globally* unique.
+  bucket = "${local.account_id}-terraform-states1"
 
+  # Enable versioning so we can see the full revision history of our
+  # state files
+  versioning {
+    enabled = true
+  }
+
+  # Enable server-side encryption by default
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+}
+resource "aws_s3_bucket" "terraform_state2" {
+  # With account id, this S3 bucket names can be *globally* unique.
+  bucket = "${local.account_id}-1terraform-states"
+
+  # Enable versioning so we can see the full revision history of our
+  # state files
+  versioning {
+    enabled = true
+  }
+
+  # Enable server-side encryption by default
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+}
 # ------------------------------------------------------------------------------
 # CREATE THE DYNAMODB TABLE
 # ------------------------------------------------------------------------------
